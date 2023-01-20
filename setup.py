@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 setup(name='docassemble.DocAssamble20222',
       version='0.0.1',
       description=('A docassemble extension.'),
-      long_description='# docassemble.DocAssamble20222\n\nA docassemble extension.\n\n## Author\n\nPratibha B, pratibhab@gmail.com\n\n',
+      long_description='# docassemble.DocAssamble20222\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nPratibha B, pratibhab@gmail.com\r\n\r\n',
       long_description_content_type='text/markdown',
       author='Pratibha B',
       author_email='pratibhab@gmail.com',

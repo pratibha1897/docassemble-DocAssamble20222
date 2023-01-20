@@ -6,6 +6,9 @@
 svg.svg-inline--fa.fa-circle-question{
     color: purple;
 }
+.mt-2 {
+    margin-top: 1.5rem!important;
+}
 
 .btn-primary {
     --bs-btn-color: #fff;

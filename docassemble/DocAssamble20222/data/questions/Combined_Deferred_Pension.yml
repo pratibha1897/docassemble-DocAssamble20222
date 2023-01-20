@@ -457,7 +457,8 @@ fields:
 
 ---
 question: |
-  Date of Marriage
+  Date of Marriage [download the template]
+   [download the template]: ${ url_of('ADDENDUM_TEMPLATE_v2.docx') }
 fields:
   - Date of Marriage: date_of_marriage
     datatype: date
@@ -530,7 +531,7 @@ script: |
 post: |
   Can't afford the fee? Though we charge less than any other QDRO website out there, we've got your back. Please reach out to us via the contact form on [(Lexyalgo.com)](${ url_of('https://Lexyalgo.com/') }){:target="_blank"} and we'll provide a coupon code.
 
-  <input type="submit" value = "coupon">
+  <input type="submit" value = "Coupon">
 ---
 event: payment.success
 code: |
