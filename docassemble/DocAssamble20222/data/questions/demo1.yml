@@ -1,0 +1,61 @@
+modules:
+  - .dastripe
+  - .coupon_code
+---
+features:
+  javascript: https://js.stripe.com/v3/
+  popover trigger: click
+  progress bar: True
+  show progress bar percentage: True
+  css: buttons.css
+
+---
+
+objects:
+  - payment: DAStripe.using(payor=petitioner, currency='usd')
+  - petitioner: Individual
+  - coupon_code: DAList
+---
+id: interview order
+mandatory: True
+code: |
+  check_this
+  check_coupon
+  coupon_code
+---
+code: |
+  run: check_coupon(coupon_code)
+  if check_coupon(coupon_code) == True:
+    check_this
+  else:
+    check_this
+---
+code: |
+  payment.amount = 50
+---
+field: check_coupon
+question: |
+  Do you have coupon?
+subquestion: |
+  In order to cover our development costs, we are initially charging $${payment.amount} per QDRO. If you are unhappy with your QDRO, we have a 100% satisfaction guarantee - just reach out within three months, give us a chance to make the QDRO right, and we'll give a full refund if the QDRO can't be fixed.
+post: |
+  Can't afford the fee? Though we charge less than any other QDRO website out there, we've got your back. Please reach out to us via the contact form on [(Lexyalgo.com)](${ url_of('https://Lexyalgo.com/') }){:target="_blank"} and we'll provide a coupon code.
+noyes: check
+---
+question: |
+  Enter coupon code?
+fields:
+  - couponcode: coupon_code
+validation code: |
+  if not check_coupon(coupon_code) == True:
+    validation_error('Coupon code is not valid')
+---
+field: check_this
+question: |
+  % if check:
+    ${ payment.html }
+  - script: |
+    ${ payment.javascript }
+  % else:
+   you coupon code is ${ coupon_code }
+  % endif

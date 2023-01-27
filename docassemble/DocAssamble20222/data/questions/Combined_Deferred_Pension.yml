@@ -1,5 +1,6 @@
 modules:
   - .dastripe
+  - .coupon_code
 ---
 features:
   javascript: https://js.stripe.com/v3/
@@ -56,15 +57,15 @@ code: |
   participant_address_info
   alternate_payee_info
   alternate_payee_address_info
-  if (pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)" and awarding == "Percentage To The Alternate Payee") or (pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)" and awarding == "Percentage Of An Employee Stock Ownership Plan (ESOP)"):
+  if (pick_plan == "Deferred Compensation (Cash & Investment Account 401K)" and awarding == "Percentage To The Alternate Payee") or (pick_plan == "Deferred Compensation (Cash & Investment Account 401K)" and awarding == "Percentage Of An Employee Stock Ownership Plan (ESOP)"):
     percentage
     assignment_date
-  if pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)" and awarding == "Fixed Dollar Amount With Gains Or Losses":
+  if pick_plan == "Deferred Compensation (Cash & Investment Account 401K)" and awarding == "Fixed Dollar Amount With Gains Or Losses":
     dollar
     assignment_date
-  if pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)" and awarding == "Fixed Dollar Amount With No Gains Or Losses":
+  if pick_plan == "Deferred Compensation (Cash & Investment Account 401K)" and awarding == "Fixed Dollar Amount With No Gains Or Losses":
     dollar
-  if (pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)" and awarding == "Percentage, But Excluding Pre-Marital Balance") or (pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)" and awarding == "Percentage, But Excluding Pre-Marital Balance With Passive Growth"):
+  if (pick_plan == "Deferred Compensation (Cash & Investment Account 401K)" and awarding == "Percentage, But Excluding Pre-Marital Balance") or (pick_plan == "Deferred Compensation (Cash & Investment Account 401K)" and awarding == "Percentage, But Excluding Pre-Marital Balance With Passive Growth"):
     percentage
     assignment_date
     date_of_marriage
@@ -80,6 +81,11 @@ code: |
     assignment_date
   if not payment.paid:
     payment_screen
+  run: check_coupon(coupon_code)
+  if check_coupon(coupon_code) == True:
+    coupon_page
+  if check_coupon(coupon_code) == False:
+    raise("Error: my_variable cannot be 0.")
 ---
 question: |
   What type of plan will you be dividing today?
@@ -87,7 +93,7 @@ fields:
   - Pick One: pick_plan
     datatype: radio
     choices:
-      - Deferred Compensation (Cash & Investment Account 41k-type)
+      - Deferred Compensation (Cash & Investment Account 401K)
       - Pension Plan (Plans that guarantee monthly retirement income)
 ---
 question: |
@@ -457,14 +463,13 @@ fields:
 
 ---
 question: |
-  Date of Marriage [download the template]
-   [download the template]: ${ url_of('ADDENDUM_TEMPLATE_v2.docx') }
+  Date of Marriage
 fields:
   - Date of Marriage: date_of_marriage
     datatype: date
 ---
 question: |
-  What is the dollar amount that the non-employee spouse will receive?
+  What is the dollar amount that the non-employee spouse will receive?<button type="submit" class="btn btn-da btn-primary" action="next" data-target={{ coupon_page }}>Coupon</button>
 fields:
   - Dollar: dollar
     datatype: currency 
@@ -521,7 +526,7 @@ code: |
 ---
 event: payment.demand
 question: |
-  Payment
+  Payment <button type="submit" class="btn btn-da btn-primary" action="next" data-target={{ coupon_page }}>Coupon</button>
 under: |
   In order to cover our development costs, we are initially charging $${payment.amount} per QDRO. If you are unhappy with your QDRO, we have a 100% satisfaction guarantee - just reach out within three months, give us a chance to make the QDRO right, and we'll give a full refund if the QDRO can't be fixed.
   ${ payment.html }
@@ -531,7 +536,16 @@ script: |
 post: |
   Can't afford the fee? Though we charge less than any other QDRO website out there, we've got your back. Please reach out to us via the contact form on [(Lexyalgo.com)](${ url_of('https://Lexyalgo.com/') }){:target="_blank"} and we'll provide a coupon code.
 
-  <input type="submit" value = "Coupon">
+  
+
+---
+field: coupon_page
+mandatory: True
+question: |
+  Enter coupon code?
+fields:
+  - Coupon code: coupon_code
+
 ---
 event: payment.success
 code: |
@@ -560,7 +574,7 @@ attachment:
   variable name: addendum
 always include editable files: True
 ---
-if: pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)"
+if: pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
 attachment:
   name: Document for ${ document }
   variable name: the_document
@@ -570,7 +584,7 @@ attachment:
     - docx
 always include editable files: True
 ---
-if: document == "California" and pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)"
+if: document == "California" and pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
 attachment:
   name: Document for ${ document }
   variable name: the_document
@@ -580,7 +594,7 @@ attachment:
     - docx
 always include editable files: True
 ---
-if: document == "North Dakota" and pick_plan == "Deferred Compensation (Cash & Investment Account 41k-type)"
+if: document == "North Dakota" and pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
 attachment:
   name: Document for ${ document }
   variable name: the_document
