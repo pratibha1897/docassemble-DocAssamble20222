@@ -1,31 +1,89 @@
-metadata:
-  title: "List: gathering"
-  short title: "List: gathering"
-  documentation: "https://docassemble.org/docs/groups.html#gathering"
-  example start: 1
-  example end: 5
+modules:
+  - .dastripe_demo
 ---
+features:
+  javascript: https://js.stripe.com/v3/
+  popover trigger: click
+  css: buttons.css
+
+---
+
 objects:
-  - fruit: DAList
+  - payment: DAStripe.using(payor=petitioner, currency='usd')
+  - petitioner: Individual
+  - user: Individual 
+  - user: DADict.using(object_type=DAObject)
+  
+---
+mandatory: True
+code: |
+  draft_shown
+  if payment.paid:
+    final_shown
+---
+
+event: payment_screen
+question: |
+  You need to pay first.
+---
+code: |
+  payment.amount = 1
+---
+event: payment.demand
+question: |
+   Payment
+subquestion: |
+  In order to cover our development costs, we are initially charging $${payment.amount} per QDRO. If you are unhappy with your QDRO, we have a 100% satisfaction guarantee - just reach out within three months, give us a chance to make the QDRO right, and we'll give a full refund if the QDRO can't be fixed.
+  ${ payment.html }
+script: |
+  ${ payment.javascript }
+post: |
+  Can't afford the fee? Though we charge less than any other QDRO website out there, we've got your back. Please reach out to us via the contact form on [(Lexyalgo.com)](${ url_of('https://Lexyalgo.com/') }){:target="_blank"} and we'll provide a coupon code.
+---
+question: |
+  what is your name?
+fields:
+  - F name: user.name.first
+  - L name: user.name.last
+---
+event: payment.success
+code: |
+  payment.process()
+---
+question: |
+  Here is your draft document
+attachment code: draft_document
+continue button field: draft_shown
+---
+question: |
+  Here is your final document
+attachment code: final_document
+continue button field: final_shown
+---
+attachment:
+  variable name: draft_document
+  docx template file: document_draft.docx
+  valid formats:
+    - pdf
+  code: pdf_fields
+---
+attachment:
+  variable name: final_document
+  docx template file: document_final.docx
+  valid formats:
+    - pdf
+    - docx
+  code: pdf_fields
+---
+code: |
+  pdf_fields = {
+    'first_name': user.name.first,
+    'last_name': user.name.last
+  }
 ---
 mandatory: True
 question: |
-  There are ${ fruit.number_as_word() }
-  fruits in all.
+  Hey ${ user.name }.
 subquestion: |
-  The fruits are ${ fruit }.
----
-question: |
-  Are there any fruit that you would like
-  to add to the list?
-yesno: fruit.there_are_any
----
-question: |
-  What fruit should be added to the list?
-fields:
-  - Fruit: fruit[i]
----
-question: |
-  So far, the fruits include ${ fruit }.
-  Are there any others?
-yesno: fruit.there_is_another
+  Thank you for your time.
+  

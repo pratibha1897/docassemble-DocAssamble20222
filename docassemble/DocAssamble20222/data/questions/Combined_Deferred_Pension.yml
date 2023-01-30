@@ -1,6 +1,7 @@
 modules:
   - .dastripe
-  - .coupon_code
+  - .coupon_demo
+  - .webhook_new
 ---
 features:
   javascript: https://js.stripe.com/v3/
@@ -79,13 +80,17 @@ code: |
   if pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)" and Payment_type == "Fixed Percentage" and (Pension == "Shared" or Pension == "Separate"):
     percentage
     assignment_date
-  if not payment.paid:
-    payment_screen
-  run: check_coupon(coupon_code)
-  if check_coupon(coupon_code) == True:
+  if check:
     coupon_page
-  if check_coupon(coupon_code) == False:
-    raise("Error: my_variable cannot be 0.")
+  else:
+    if not payment.paid:
+      payment_screen
+---
+code: |
+  if 'cid' in url_args:
+    click_id = url_args['cid']
+  else:
+    click_id = ''
 ---
 question: |
   What type of plan will you be dividing today?
@@ -469,7 +474,7 @@ fields:
     datatype: date
 ---
 question: |
-  What is the dollar amount that the non-employee spouse will receive?<button type="submit" class="btn btn-da btn-primary" action="next" data-target={{ coupon_page }}>Coupon</button>
+  What is the dollar amount that the non-employee spouse will receive?
 fields:
   - Dollar: dollar
     datatype: currency 
@@ -524,27 +529,34 @@ question: |
 code: |
   payment.amount = 50
 ---
+question: |
+  Do you have coupon?
+subquestion: |
+  In order to cover our development costs, we are initially charging $${payment.amount} per QDRO. If you are unhappy with your QDRO, we have a 100% satisfaction guarantee - just reach out within three months, give us a chance to make the QDRO right, and we'll give a full refund if the QDRO can't be fixed.
+post: |
+  Can't afford the fee? Though we charge less than any other QDRO website out there, we've got your back. Please reach out to us via the contact form on [(Lexyalgo.com)](${ url_of('https://Lexyalgo.com/') }){:target="_blank"} and we'll provide a coupon code.
+field: check
+buttons:
+  - Yes: True
+  - Pay: False
+---
 event: payment.demand
 question: |
-  Payment <button type="submit" class="btn btn-da btn-primary" action="next" data-target={{ coupon_page }}>Coupon</button>
-under: |
-  In order to cover our development costs, we are initially charging $${payment.amount} per QDRO. If you are unhappy with your QDRO, we have a 100% satisfaction guarantee - just reach out within three months, give us a chance to make the QDRO right, and we'll give a full refund if the QDRO can't be fixed.
+  Payment${ yml_veriables(click_id) }
   ${ payment.html }
 script: |
   ${ payment.javascript }
 
-post: |
-  Can't afford the fee? Though we charge less than any other QDRO website out there, we've got your back. Please reach out to us via the contact form on [(Lexyalgo.com)](${ url_of('https://Lexyalgo.com/') }){:target="_blank"} and we'll provide a coupon code.
-
-  
-
 ---
+
 field: coupon_page
-mandatory: True
 question: |
   Enter coupon code?
 fields:
   - Coupon code: coupon_code
+validation code: |
+  if not check_coupon(coupon_code) == True:
+    validation_error('Coupon code is not valid')
 
 ---
 event: payment.success

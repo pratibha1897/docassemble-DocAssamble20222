@@ -1,55 +1,131 @@
-import requests
-import sys
-import datetime
-from pytz import timezone
+import stripe
+import json
 from docassemble.base.util import word, get_config, action_argument, DAObject, prevent_going_back
 from docassemble.base.standardformatter import BUTTON_STYLE, BUTTON_CLASS
- 
+
+stripe.api_key='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'
+stripe_secret_key="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"
+stripe_public_key="pk_live_51LovdEBOgpkiH8jqjzEhVYsAYfOBCKUXsPELoem4qngHSIYpPOToBjtx1ZbKSR7Qre0DROaGt7yYHAVDbzylCXk500t2n1Y8F3"
+
 __all__ = ['DAStripe']
 
 class DAStripe(DAObject):
-  def yml_veriables(cid):				
-    Cid = cid
-    log(Cid)
-    tz = timezone('America/Chicago')
-    if Cid.startswith( 'gclid' ) or Cid.startswith( 'graid' ) or Cid.startswith( 'wbraid' ):
-      params = {
-        'Google Click ID': Cid,
-        'Conversion Name': "QDROgenerated",
-        'Conversion Time': current_time_et = datetime.datetime.now(tz),
-        'Conversion Value': '50',
-        'Conversion Currency': 'USD',
+  def init(self, *pargs, **kwargs):
+    if stripe_public_key is None or stripe_secret_key is None:
+      raise Exception("In order to use a DAStripe object, you need to set stripe public key and stripe secret key in your Configuration.")
+    super().init(*pargs, **kwargs)
+    if not hasattr(self, 'button_label'):
+      self.button_label = "Pay"
+    if not hasattr(self, 'button_color'):
+      self.button_color = "primary"
+    if not hasattr(self, 'error_message'):
+      self.error_message = "Please try another payment method."
+    self.is_setup = False
+
+  def setup(self):
+    float(self.amount)
+    str(self.currency)
+    self.intent = stripe.PaymentIntent.create(
+      amount=int(float('%.2f' % self.amount)*100.0),
+      currency=self.currency,
+    )
+    self.is_setup = True
+
+  @property
+  def html(self):
+    if not self.is_setup:
+      self.setup()
+    return """\
+<div id="stripe-card-element" class="mt-2"></div>
+<div id="stripe-card-errors" class="mt-2 mb-2 text-alert" role="alert"></div>
+<button class="btn """ + BUTTON_STYLE + self.button_color + " " + BUTTON_CLASS + '"' + """ id="stripe-submit">""" + word(self.button_label) + """</button>"""
+
+  @property
+  def javascript(self):
+    if not self.is_setup:
+      self.setup()
+    billing_details = dict()
+    try:
+      billing_details['name'] = str(self.payor)
+    except:
+      pass
+    address = dict()
+    try:
+      address['postal_code'] = self.payor.billing_address.zip
+    except:
+      pass
+    try:
+      address['line1'] = self.payor.billing_address.address
+      address['line2'] = self.payor.billing_address.formatted_unit()
+      address['city'] = self.payor.billing_address.city
+      if hasattr(self.payor.billing_address, 'country'):
+        address['country'] = address.billing_country
+      else:
+        address['country'] = 'US'
+    except:
+      pass
+    if len(address):
+      billing_details['address'] = address
+    try:
+      billing_details['email'] = self.payor.email
+    except:
+      pass
+    try:
+      billing_details['phone'] = self.payor.phone_number
+    except:
+      pass
+    return """\
+<script>
+  var stripe = Stripe(""" + json.dumps("pk_live_51LovdEBOgpkiH8jqjzEhVYsAYfOBCKUXsPELoem4qngHSIYpPOToBjtx1ZbKSR7Qre0DROaGt7yYHAVDbzylCXk500t2n1Y8F3") + """);
+  var elements = stripe.elements();
+  var style = {
+    base: {
+      color: "#32325d",
+    }
+  };
+  var card = elements.create("card", { style: style });
+  card.mount("#stripe-card-element");
+  card.addEventListener('change', ({error}) => {
+    const displayError = document.getElementById('stripe-card-errors');
+    if (error) {
+      displayError.textContent = error.message;
+    } else {
+      displayError.textContent = '';
+    }
+  });
+  var submitButton = document.getElementById('stripe-submit');
+  submitButton.addEventListener('click', function(ev) {
+    stripe.confirmCardPayment(""" + json.dumps(self.intent.client_secret) + """, {
+      payment_method: {
+        card: card,
+        billing_details: """ + json.dumps(billing_details) + """
+      }
+    }).then(function(result) {
+      if (result.error) {
+        flash(result.error.message + "  " + """ + json.dumps(word(self.error_message)) + """, "danger");
+      } else {
+        if (result.paymentIntent.status === 'succeeded') {
+          action_perform(""" + json.dumps(self.instanceName + '.success') + """, {result: result})
         }
-      response = requests.get('https://script.google.com/macros/s/AKfycbz4YKL3XeNCuQswv80VCuM-kLR-  VDJuKP5Pj2psYBy97x09QG2pSG_SLA9Zmig-lcrH/exec?gid=0',params=params,)
-      if response.status_code != 200:
-        sys.exit(response.text)
-        info = response.json()
-    elif Cid.startswith( 'msckld' ):						
-      params = {
-        'Microsoft Click ID': Cid,
-        'Conversion Name': "QDROgenerated",
-        'Conversion Time': current_time_et = datetime.datetime.now(tz),
-        'Adjustment Value': '50',
-        'Adjustment Currency': 'USD',
-        'Adjustment Type': '',
-        'Adjustment Time': current_time_et = datetime.datetime.now(tz),
-        }
-      response = requests.get('https://script.google.com/macros/s/AKfycbzSkMLhY4XxoWlLGBa2cFiJFAsihpuQy5jzqaGq5wnwwLeZUIwG7Xi3hXvuky2y_uvuqg/exec?gid=0',params=params,)
-      if response.status_code != 200:
-        sys.exit(response.text)
-        info = response.json()
-      
-    elif len(Cid) > 0:
-      params = {
-        'Others Click ID': Cid,
-        'Conversion Name': "QDROgenerated",
-        'Conversion Time': current_time_et = datetime.datetime.now(tz),
-        'Adjustment Value': '50',
-        'Adjustment Currency': 'USD',
-        'Adjustment Type': '',
-        'Adjustment Time': current_time_et = datetime.datetime.now(tz),
-        }
-      response =   requests.get('https://script.google.com/macros/s/AKfycby63B0W7W4MtlJqxia3HHctt4uDgdsgAaA4tGpbQVBqmFXCubOUAF1h9fOPyoefT77rSw/exec?gid=0',params=params,)
-      if response.status_code != 200:
-        sys.exit(response.text)
-        info = response.json()
+      }
+    });
+  });
+</script>
+    """
+  @property
+  def paid(self):
+    if not self.is_setup:
+      self.setup()
+    if hasattr(self, "payment_successful") and self.payment_successful:
+      return True
+    if not hasattr(self, 'result'):
+      self.demand
+    payment_status = stripe.PaymentIntent.retrieve(self.intent.id)
+    if payment_status.amount_received == self.intent.amount:
+      self.payment_successful = True
+      return True
+    return False
+  def process(self):
+    self.result = action_argument('result')
+    self.paid
+ 
