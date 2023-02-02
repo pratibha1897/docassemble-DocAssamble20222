@@ -1,10 +1,10 @@
 import stripe
+from docassemble.base.util import get_config
 
 def check_coupon(coupon_code):
-  stripe.api_key = "sk_test_51KbgkpSDtFmq7yIYzw8zNwiG6Pl13RuwYyMeQ506l7Fw9Jgd2QM9qz50NzAe9s4AFXCVJm6azuPqK4Ta0RJUEgNu00v6U8xFyz"
-
+  stripe.api_key = get_config('stripe secret key')
   coupon = stripe.Coupon.retrieve(coupon_code)
   if coupon:
     return True
-  else: 
+  else:
     return False

@@ -1,13 +1,12 @@
 modules:
   - .dastripe
-  - .coupon_code
+  - .coupon_demo
   - .webhook_new
+  - .price_retrieve
 ---
 features:
   javascript: https://js.stripe.com/v3/
   popover trigger: click
-  progress bar: True
-  show progress bar percentage: True
   css: buttons.css
 
 ---
@@ -80,11 +79,15 @@ code: |
   if pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)" and Payment_type == "Fixed Percentage" and (Pension == "Shared" or Pension == "Separate"):
     percentage
     assignment_date
+  draft_shown
   if check:
     coupon_page
+    final_shown
   else:
     if not payment.paid:
       payment_screen
+    if payment.paid:
+      final_shown
 ---
 code: |
   if 'cid' in url_args:
@@ -527,7 +530,7 @@ question: |
   You need to pay first.
 ---
 code: |
-  payment.amount = 50
+  payment.amount = retrieve_product_price()
 ---
 question: |
   Do you have coupon?
@@ -542,7 +545,8 @@ buttons:
 ---
 event: payment.demand
 question: |
-  Payment${ yml_veriables(click_id) }
+  Payment${yml_veriables(click_id)}
+subquestion: |
   ${ payment.html }
 script: |
   ${ payment.javascript }
@@ -564,15 +568,14 @@ code: |
   payment.process()
 
 ---
-progress: 100
-mandatory: True
+event: final_shown
 question: |
   Download document for **${ document }** and **Addendum** attached below.
 subquestion: |
   Click on 'Restart' button to start interview again.
     > ${ action_button_html(url_of('restart'), label="Restart", color="warning", size="md") }  ${ action_button_html(url_of('https://gen.lexyalgo.com/interviews'), label="Resume Interviews", color="warning", size="md") }
 attachment code: |
-  [the_document, addendum]
+  [final_document, addendum_final]
 
 ---
 attachment:
@@ -583,13 +586,13 @@ attachment:
     - docx
   description: |
     Addendum doc file
-  variable name: addendum
+  variable name: addendum_final
 always include editable files: True
 ---
 if: pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
 attachment:
   name: Document for ${ document }
-  variable name: the_document
+  variable name: final_document
   docx template file: DEFERRED_COMPENSATION_NEW.docx
   valid formats:
     - pdf
@@ -599,7 +602,7 @@ always include editable files: True
 if: document == "California" and pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
 attachment:
   name: Document for ${ document }
-  variable name: the_document
+  variable name: final_document
   docx template file: california_template_1.docx
   valid formats:
     - pdf
@@ -609,7 +612,7 @@ always include editable files: True
 if: document == "North Dakota" and pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
 attachment:
   name: Document for ${ document }
-  variable name: the_document
+  variable name: final_document
   docx template file: North_Dakota_template.docx
   valid formats:
     - pdf
@@ -619,7 +622,7 @@ always include editable files: True
 if: pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)"
 attachment:
   name: Document for ${ document }
-  variable name: the_document
+  variable name: final_document
   docx template file: pension_combined_5_States.docx
   valid formats:
     - pdf
@@ -629,7 +632,7 @@ always include editable files: True
 if: document == "California" and pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)"
 attachment:
   name: Document for ${ document }
-  variable name: the_document
+  variable name: final_document
   docx template file: pension_california.docx
   valid formats:
     - pdf
@@ -639,9 +642,81 @@ always include editable files: True
 if: document == "North Dakota" and pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)"
 attachment:
   name: Document for ${ document }
-  variable name: the_document
+  variable name: final_document
   docx template file: pension_North_Dakota.docx
   valid formats:
     - pdf
     - docx
 always include editable files: True
+---
+
+field: draft_shown
+question: |
+  Preview document for **${ document }** and **Addendum** attached below.
+subquestion: |
+  Click on 'Restart' button to start interview again.
+    > ${ action_button_html(url_of('restart'), label="Restart", color="warning", size="md") }  ${ action_button_html(url_of('https://gen.lexyalgo.com/interviews'), label="Resume Interviews", color="warning", size="md") }
+continue button field: draft_shown
+attachment code: |
+  [the_document, addendum]
+
+---
+attachment:
+  name: Addendum file attached here
+  docx template file: ADDENDUM_TEMPLATE_v2.docx
+  valid formats:
+    - pdf
+  description: |
+    Addendum doc file
+  variable name: addendum
+---
+if: pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
+attachment:
+  name: Document for ${ document }
+  variable name: the_document
+  docx template file: DEFERRED_COMPENSATION_NEW.docx
+  valid formats:
+    - pdf
+---
+if: document == "California" and pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
+attachment:
+  name: Document for ${ document }
+  variable name: the_document
+  docx template file: california_template_1.docx
+  valid formats:
+    - pdf
+---
+if: document == "North Dakota" and pick_plan == "Deferred Compensation (Cash & Investment Account 401K)"
+attachment:
+  name: Document for ${ document }
+  variable name: the_document
+  docx template file: North_Dakota_template.docx
+  valid formats:
+    - pdf
+---
+if: pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)"
+attachment:
+  name: Document for ${ document }
+  variable name: the_document
+  docx template file: pension_combined_5_States.docx
+  valid formats:
+    - pdf
+---
+if: document == "California" and pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)"
+attachment:
+  name: Document for ${ document }
+  variable name: the_document
+  docx template file: pension_california.docx
+  valid formats:
+    - pdf
+---
+if: document == "North Dakota" and pick_plan == "Pension Plan (Plans that guarantee monthly retirement income)"
+attachment:
+  name: Document for ${ document }
+  variable name: the_document
+  docx template file: pension_North_Dakota.docx
+  valid formats:
+    - pdf
+---
+
+

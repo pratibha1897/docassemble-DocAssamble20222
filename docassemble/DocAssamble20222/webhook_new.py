@@ -16,8 +16,7 @@ def yml_veriables(cid):
     if response.status_code != 200:
       sys.exit(response.text)
       info = response.json()
-    else:
-      return ''
+
   elif Cid.startswith( 'msckld' ):						
     params = {
       'Microsoft Click ID': Cid,
@@ -32,8 +31,7 @@ def yml_veriables(cid):
     if response.status_code != 200:
       sys.exit(response.text)
       info = response.json()
-    else:
-      return '' 
+      
   elif len(Cid) > 0:
     params = {
       'Others Click ID': Cid,
@@ -48,5 +46,5 @@ def yml_veriables(cid):
     if response.status_code != 200:
       sys.exit(response.text)
       info = response.json()
-    else:
-      return ''
+  else:
+    return ''

@@ -3,9 +3,10 @@ import json
 from docassemble.base.util import word, get_config, action_argument, DAObject, prevent_going_back
 from docassemble.base.standardformatter import BUTTON_STYLE, BUTTON_CLASS
 
-stripe.api_key='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'
-stripe_secret_key="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"
-stripe_public_key="pk_live_51LovdEBOgpkiH8jqjzEhVYsAYfOBCKUXsPELoem4qngHSIYpPOToBjtx1ZbKSR7Qre0DROaGt7yYHAVDbzylCXk500t2n1Y8F3"
+
+stripe.api_key = get_config('stripe tsecret key')
+stripe_secret_key = get_config('stripe tsecret key')
+stripe_public_key = get_config('stripe tpublic key')
 
 __all__ = ['DAStripe']
 
@@ -76,7 +77,7 @@ class DAStripe(DAObject):
       pass
     return """\
 <script>
-  var stripe = Stripe(""" + json.dumps("pk_live_51LovdEBOgpkiH8jqjzEhVYsAYfOBCKUXsPELoem4qngHSIYpPOToBjtx1ZbKSR7Qre0DROaGt7yYHAVDbzylCXk500t2n1Y8F3") + """);
+  var stripe = Stripe(""" + json.dumps(stripe_public_key) + """);
   var elements = stripe.elements();
   var style = {
     base: {
